@@ -1,0 +1,24 @@
+version: '3.9'
+
+networks:
+  app-network:
+    name: laravel-network
+    driver: bridge
+
+services:
+  composer:
+    tty: true
+    container_name: laravel-composer
+    build:
+      context: .
+      dockerfile: Dockerfile-composer
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-composer:latest
+    entrypoint: [ 'composer', 'create-project', 'laravel/laravel', 'site', '--ignore-platform-reqs' ]
+    volumes:
+      - ./app:/app
+    networks:
+      - app-network

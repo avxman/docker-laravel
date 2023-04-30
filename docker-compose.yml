@@ -16,6 +16,24 @@ volumes:
     name: laravel-dbbackup-data
 
 services:
+  composer:
+    tty: true
+    container_name: laravel-composer
+    build:
+      context: .
+      dockerfile: Dockerfile-composer
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-composer:latest
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - composer update --ignore-platform-reqs
+    volumes:
+      - ./app/site:/app
+    networks:
+      - app-network
   nginx:
     restart: unless-stopped
     container_name: laravel-nginx
@@ -30,7 +48,7 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./app/site/site/app/:/var/www/html/app
+      - ./app/site/app/:/var/www/html/app
       - ./app/site/config:/var/www/html/config
       - ./app/site/database:/var/www/html/database
       - ./app/site/public:/var/www/html/public
@@ -351,23 +369,8 @@ services:
     environment:
       APP_ENV: production
     depends_on:
+      - composer
       - php
-    networks:
-      - app-network
-  composer:
-    tty: true
-    container_name: laravel-composer
-    build:
-      context: .
-      dockerfile: Dockerfile-composer
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-composer:latest
-    entrypoint: ['composer', 'create-project', 'laravel/laravel', 'site', '--ignore-platform-reqs']
-    volumes:
-      - ./app:/app
     networks:
       - app-network
   npm-files:
