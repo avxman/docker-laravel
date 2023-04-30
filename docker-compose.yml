@@ -366,8 +366,6 @@ services:
         - USER=${USER:-laravel}
     image: laravel-composer:latest
     entrypoint: ['composer', 'create-project', 'laravel/laravel', 'site', '--ignore-platform-reqs']
-#    command:
-#      - update
     volumes:
       - ./app/site:/app
     networks:
