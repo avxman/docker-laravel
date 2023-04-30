@@ -6,9 +6,11 @@
 
 ### Установка фреймворка laravel
 
-* В файле ./docker-compose.yml запускаем сервис **compose** или 
+* В файле ./docker-composer.yml запускаем сервис **compose** или 
 в командной строке (запускаем из корневной папке): 
-``docker compose run composer``. Ожидаем завершение установки laravel
+``docker compose -f docker-install.yml up composer``.
+Ожидаем завершение установки laravel
+
 * В файле ./app/site/.env добавить и отредактировать ключи:
 ```dotenv
 # Общие настройки
@@ -187,7 +189,7 @@ export default function FrontendLayout({ children }:{children:any}) {
 * Создаем файл ./app/site/resources/js/Pages/Page.tsx и добавляем код:
 ```tsx
 import {Head, Link} from "@inertiajs/react"
-import FrontendLayout from "../../Layouts/FrontendLayout"
+import FrontendLayout from "../Layouts/FrontendLayout"
 import {useTranslation} from "react-i18next"
 
 const Index = ({ data, links } : {data:any, links:any})=>{
@@ -365,16 +367,18 @@ export default defineConfig({
         "predis/predis": "^2.1"
     },
 ```
-* файл ./docker-compose.yml в сервисе ``composer`` 
+* файл ./docker-composer.yml в сервисе ``composer`` 
 замениваем строчку кода `entrypoint` на:
 ```yaml
 entrypoint: ["/bin/sh","-c"]
 command:
   - cd site && composer update --ignore-platform-reqs
 ```
-* В файле ./docker-compose.yml запускаем сервис **compose** или
+* В файле ./docker-composer.yml запускаем сервис **compose** или
 в командной строке (запускаем из корневной папке):
-``docker compose run composer``. Ожидаем завершение установки пакетов
+``docker compose -f docker-install.yml up composer``. 
+Ожидаем завершение установки пакетов
+
 * Миграция и сиды. Чтобы запусить генерацию сидов (seeds) - в файле
 ./docker-compose.yml сервис **migrate** комманда **command:**
 разкоменентируем строчку ``php artisan db:seed``.
@@ -406,7 +410,7 @@ ASSET_URL=http://localhost:3000
 ```
 * В файле ./docker-compose.yml сервисе **npm** меняем в строчках значения:
 ```yaml
-  entrypoint: ["npm", "run", "dev", "--"],
+  entrypoint: ["npm", "run", "dev", "--"]
   environment:
     APP_ENV: local
 ```
