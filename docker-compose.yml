@@ -370,3 +370,23 @@ services:
       - ./app:/app
     networks:
       - app-network
+  npm-files:
+    tty: true
+    container_name: laravel-npm-files
+    build:
+      context: .
+      dockerfile: Dockerfile-npm
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-npm-files:latest
+    ports:
+      - ":3010"
+    entrypoint: ["npm", "install"]
+    volumes:
+      - ./app/site/node_modules:/home/node/project/node_modules
+    depends_on:
+      - php
+    networks:
+      - app-network
