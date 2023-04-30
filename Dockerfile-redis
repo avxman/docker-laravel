@@ -1,0 +1,6 @@
+FROM redis:7.0.11
+#redis:7.0.11
+
+COPY ./redis/config/redis.conf /usr/local/etc/redis/redis.conf
+
+#CMD [ "redis-server", "/usr/local/etc/redis/redis.conf", "--requirepass", "eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81"]

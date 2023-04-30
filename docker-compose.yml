@@ -1,0 +1,374 @@
+version: '3.9'
+
+networks:
+  app-network:
+    name: laravel-network
+    driver: bridge
+
+volumes:
+  postgres-data:
+    name: laravel-db-data
+  pgadmin-data:
+    name: laravel-pgadmin-data
+  redis-data:
+    name: laravel-redis-data
+  dbbackup-data:
+    name: laravel-dbbackup-data
+
+services:
+  nginx:
+    restart: unless-stopped
+    container_name: laravel-nginx
+    build:
+      context: .
+      dockerfile: Dockerfile-nginx
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-nginx:latest
+    ports:
+      - "8000:80"
+    volumes:
+      - ./app/site/site/app/:/var/www/html/app
+      - ./app/site/config:/var/www/html/config
+      - ./app/site/database:/var/www/html/database
+      - ./app/site/public:/var/www/html/public
+      - ./app/site/resources:/var/www/html/resources
+      - ./app/site/routes:/var/www/html/routes
+      - ./app/site/storage/app:/var/www/html/storage/app
+      - ./app/site/tests:/var/www/html/tests
+      - ./app/site/vite.config.js:/var/www/html/vite.config.js
+      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
+      - ./app/site/package.json:/var/www/html/package.json
+      - ./app/site/.env:/var/www/html/.env
+      - ./app/site/composer.json:/var/www/html/composer.json
+      - ./app/site/composer.lock:/var/www/html/composer.lock
+    depends_on:
+      - php
+      - db
+      - redis
+    links:
+      - php
+      - db
+    networks:
+      - app-network
+  redis:
+    restart: unless-stopped
+    container_name: laravel-redis
+    build:
+      context: .
+      dockerfile: Dockerfile-redis
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-redis:latest
+    ports:
+      - "8001:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+  db:
+    container_name: laravel-db
+    build:
+      context: .
+      dockerfile: Dockerfile-db
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-db:latest
+    restart: unless-stopped
+    ports:
+      - "8002:5432"
+    environment:
+      #- POSTGRES_HOST=localhost
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: dfhsfs3434235
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    #      - ./db/data:/var/lib/postgresql/data
+    networks:
+      - app-network
+  php:
+    tty: true
+    restart: unless-stopped
+    container_name: laravel-php
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-php:latest
+    ports:
+      - ":9000"
+    volumes:
+      - ./app/site/app:/var/www/html/app
+      - ./app/site/config:/var/www/html/config
+      - ./app/site/database:/var/www/html/database
+      - ./app/site/public:/var/www/html/public
+      - ./app/site/resources:/var/www/html/resources
+      - ./app/site/routes:/var/www/html/routes
+      - ./app/site/storage/app:/var/www/html/storage/app
+      - ./app/site/tests:/var/www/html/tests
+      - ./app/site/vite.config.js:/var/www/html/vite.config.js
+      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
+      - ./app/site/package.json:/var/www/html/package.json
+      - ./app/site/.env:/var/www/html/.env
+      - ./app/site/composer.json:/var/www/html/composer.json
+      - ./app/site/composer.lock:/var/www/html/composer.lock
+    depends_on:
+      - redis
+    networks:
+      - app-network
+  redis-admin:
+    container_name: laravel-predis
+    restart: unless-stopped
+    build:
+      context: .
+      dockerfile: Dockerfile-redisadmin
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-redisadmin:latest
+    environment:
+      REDIS_1_HOST: redis
+      REDIS_1_PORT: 6379
+    ports:
+      - "8004:80"
+    depends_on:
+      - redis
+    networks:
+      - app-network
+  pgadmin:
+    restart: unless-stopped
+    container_name: laravel-pgadmin
+    build:
+      context: .
+      dockerfile: Dockerfile-pgadmin
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-pgadmin:latest
+    ports:
+      - '8007:80'
+    environment:
+      PGADMIN_DEFAULT_EMAIL: "alex@alex.alex"
+      PGADMIN_DEFAULT_PASSWORD: "adminadmin"
+    depends_on:
+      - db
+    volumes:
+      - pgadmin-data:/var/lib/pgadmin
+    networks:
+      - app-network
+  pgbackups:
+    restart: unless-stopped
+    user: postgres:postgres
+    image: laravel-dbbackup:latest
+    build:
+      context: .
+      dockerfile: Dockerfile-dbbackup
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    volumes:
+      - ./db/data:/backups
+      - dbbackup-data:/var/lib/postgresql/data
+    links:
+      - db:db
+    depends_on:
+      - db
+    environment:
+      - POSTGRES_HOST=db
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=dfhsfs3434235
+      - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
+      - SCHEDULE=@every 12h00m00s
+      - BACKUP_KEEP_DAYS=7
+      - BACKUP_KEEP_WEEKS=4
+      - BACKUP_KEEP_MONTHS=6
+      - HEALTHCHECK_PORT=81
+    networks:
+      - app-network
+  queue:
+    restart: unless-stopped
+    container_name: laravel-queue
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-queue:latest
+    volumes:
+      - ./app/site/app:/var/www/html/app
+      - ./app/site/config:/var/www/html/config
+      - ./app/site/database:/var/www/html/database
+      - ./app/site/public:/var/www/html/public
+      - ./app/site/resources:/var/www/html/resources
+      - ./app/site/routes:/var/www/html/routes
+      - ./app/site/storage/app:/var/www/html/storage/app
+      - ./app/site/tests:/var/www/html/tests
+      - ./app/site/vite.config.js:/var/www/html/vite.config.js
+      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
+      - ./app/site/package.json:/var/www/html/package.json
+      - ./app/site/.env:/var/www/html/.env
+      - ./app/site/composer.json:/var/www/html/composer.json
+      - ./app/site/composer.lock:/var/www/html/composer.lock
+    depends_on:
+      - db
+    entrypoint: [ 'php', 'artisan', 'queue:work' ]
+    networks:
+      - app-network
+  cron:
+    restart: unless-stopped
+    container_name: laravel-cron
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-cron:latest
+    volumes:
+      - ./app/site/app:/var/www/html/app
+      - ./app/site/config:/var/www/html/config
+      - ./app/site/database:/var/www/html/database
+      - ./app/site/public:/var/www/html/public
+      - ./app/site/resources:/var/www/html/resources
+      - ./app/site/routes:/var/www/html/routes
+      - ./app/site/storage/app:/var/www/html/storage/app
+      - ./app/site/tests:/var/www/html/tests
+      - ./app/site/vite.config.js:/var/www/html/vite.config.js
+      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
+      - ./app/site/package.json:/var/www/html/package.json
+      - ./app/site/.env:/var/www/html/.env
+      - ./app/site/composer.json:/var/www/html/composer.json
+      - ./app/site/composer.lock:/var/www/html/composer.lock
+    depends_on:
+      - db
+    entrypoint: [ 'php', 'artisan', 'schedule:work' ]
+    networks:
+      - app-network
+  artisan:
+    container_name: laravel-artisan
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-artisan:latest
+    volumes:
+      - ./app/site/app:/var/www/html/app
+      - ./app/site/config:/var/www/html/config
+      - ./app/site/database:/var/www/html/database
+      - ./app/site/public:/var/www/html/public
+      - ./app/site/resources:/var/www/html/resources
+      - ./app/site/routes:/var/www/html/routes
+      - ./app/site/storage/app:/var/www/html/storage/app
+      - ./app/site/tests:/var/www/html/tests
+      - ./app/site/vite.config.js:/var/www/html/vite.config.js
+      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
+      - ./app/site/package.json:/var/www/html/package.json
+      - ./app/site/.env:/var/www/html/.env
+      - ./app/site/composer.json:/var/www/html/composer.json
+      - ./app/site/composer.lock:/var/www/html/composer.lock
+    depends_on:
+      - db
+    entrypoint: [ 'php', 'artisan' ]
+    networks:
+      - app-network
+  migrate:
+    container_name: laravel-migrate
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-migrate:latest
+    volumes:
+      - ./app/site/app:/var/www/html/app
+      - ./app/site/config:/var/www/html/config
+      - ./app/site/database:/var/www/html/database
+      - ./app/site/public:/var/www/html/public
+      - ./app/site/resources:/var/www/html/resources
+      - ./app/site/routes:/var/www/html/routes
+      - ./app/site/storage/app:/var/www/html/storage/app
+      - ./app/site/tests:/var/www/html/tests
+      - ./app/site/vite.config.js:/var/www/html/vite.config.js
+      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
+      - ./app/site/package.json:/var/www/html/package.json
+      - ./app/site/.env:/var/www/html/.env
+      - ./app/site/composer.json:/var/www/html/composer.json
+      - ./app/site/composer.lock:/var/www/html/composer.lock
+    depends_on:
+      - db
+    entrypoint: [ "/bin/sh","-c" ]
+    command:
+      - |
+        php artisan migrate
+#        php artisan db:seed
+    networks:
+      - app-network
+  npm:
+    tty: true
+    container_name: laravel-npm
+    entrypoint: ["npm", "run", "build", "--"] #, "--", #"--host", "0.0.0.0"
+    build:
+      context: .
+      dockerfile: Dockerfile-npm
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-npm:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./app/site/public:/home/node/project/public
+      - ./app/site/resources:/home/node/project/resources
+      - ./app/site/storage/app:/home/node/project/storage/app
+      - ./app/site/tests:/home/node/project/tests
+      - ./app/site/vite.config.js:/home/node/project/vite.config.js
+      - ./app/site/tsconfig.json:/home/node/project/tsconfig.json
+      - ./app/site/package.json:/home/node/project/package.json
+      - ./app/site/.env:/home/node/project/.env
+    environment:
+      APP_ENV: production
+    depends_on:
+      - php
+    networks:
+      - app-network
+  composer:
+    tty: true
+    container_name: laravel-composer
+    build:
+      context: .
+      dockerfile: Dockerfile-composer
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-composer:latest
+    entrypoint: ['composer', 'create-project', 'laravel/laravel', 'site', '--ignore-platform-reqs']
+#    command:
+#      - update
+    volumes:
+      - ./app/site:/app
+    networks:
+      - app-network

@@ -1,0 +1,39 @@
+FROM php:8.2-fpm
+#php:8.2-fpm
+
+ADD ./php/php.ini /usr/local/etc/php/conf.d/default.ini
+
+RUN apt-get update && apt-get install -y libmcrypt-dev \
+    && apt-get install -y libzip-dev \
+    && apt-get install -y libpq-dev
+RUN docker-php-ext-install pdo
+RUN docker-php-ext-install pdo_pgsql
+RUN docker-php-ext-install zip
+RUN docker-php-ext-install exif
+RUN docker-php-ext-install opcache
+RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
+    && docker-php-ext-install pgsql pdo_pgsql
+
+WORKDIR /var/www/html
+
+COPY ./app/site/vendor /var/www/html/vendor
+COPY ./app/site/bootstrap /var/www/html/bootstrap
+COPY ./app/site/storage/framework /var/www/html/storage/framework
+COPY ./app/site/storage/logs /var/www/html/storage/logs
+COPY ./app/site/.dockerignore /var/www/html/.dockerignore
+COPY ./app/site/.editorconfig /var/www/html/.editorconfig
+COPY ./app/site/.gitattributes /var/www/html/.gitattributes
+COPY ./app/site/.gitignore /var/www/html/.gitignore
+COPY ./app/site/artisan /var/www/html/artisan
+COPY ./app/site/phpunit.xml /var/www/html/phpunit.xml
+COPY ./app/site/README.md /var/www/html/README.md
+
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+  && chmod -R 777 /var/www/html/storage \
+  && chmod -R 666 $(find /var/www/html/storage -type f) \
+  && chmod -R 777 /var/www/html/bootstrap/cache \
+  && chmod -R 666 $(find /var/www/html/bootstrap/cache -type f)
+
+COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+
+CMD ["php-fpm"]

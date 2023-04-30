@@ -1,0 +1,3 @@
+FROM composer:2.5.5
+# composer:2.5.5
+#CMD ["composer", "update"]
