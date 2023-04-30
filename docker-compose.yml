@@ -367,6 +367,6 @@ services:
     image: laravel-composer:latest
     entrypoint: ['composer', 'create-project', 'laravel/laravel', 'site', '--ignore-platform-reqs']
     volumes:
-      - ./app/site:/app
+      - ./app:/app
     networks:
       - app-network
