@@ -173,11 +173,18 @@ export default defineConfig({
 * файл ./docker-compose.yml в сервисе ``composer`` 
 замениваем строчку кода `entrypoint` на:
 ```yaml
-entrypoint: ['composer', 'update', '--ignore-platform-reqs']
+entrypoint: ["/bin/sh","-c"],
+command:
+  - cd site && composer update --ignore-platform-reqs
 ```
 * В файле ./docker-compose.yml запускаем сервис **compose** или
 в командной строке (запускаем из корневной папке):
 ``docker compose run composer``. Ожидаем завершение установки пакетов
+* Миграция и сиды. Чтобы запусить генерацию сидов (seeds) - в файле
+./docker-compose.yml сервис **migrate** комманда **command:**
+разкоменентируем строчку ``php artisan db:seed``.
+Заметка: при каждом запуске будет запускаться генерация seeds,
+закомментируйте код в случаи повторных запусков генерации
 * **Настройка laravel завершена**
 
 ### Запуск проекта
