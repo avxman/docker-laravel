@@ -42,7 +42,13 @@ REDIS_PORT=6379
 REDIS_CLIENT=predis
 ```
 
-* Создаем папку ./app/site/resources/js/Pages
+* Удаляем всё из папок: ./app/site/resources/js, ./app/site/resources/views
+
+* Удаляем папку ./app/site/resources/css
+
+* Создаем папки ./app/site/public/build, ./app/site/resources/js/Pages,
+  ./app/site/resources/js/Layouts, ./app/site/resources/styles,
+./app/site/resources/styles/scss, ./app/site/node_modules
 
 * Создаем файл ./app/site/resources/styles/scss/app.scss и добавляем код:
 ```scss
@@ -153,7 +159,55 @@ createInertiaApp({
 
 ```
 
-* Создаем файл ./app/site/resources/views/app.blade.php
+* Создаем файл ./app/site/resources/js/Layouts/FrontendLayout.tsx и добавляем код:
+```tsx
+import {ThemeProvider} from "react-bootstrap"
+
+export default function FrontendLayout({ children }:{children:any}) {
+    return (
+        <ThemeProvider breakpoints={['fhd', 'hd', 'xxl', 'xl', 'lg', 'md', 'sm', 'sx', 'xs']} minBreakpoint="sx">
+            <>
+                <header>
+                    Header
+                </header>
+                <main>
+                    Main
+                    {children}
+                </main>
+                <footer>
+                    Footer
+                </footer>
+            </>
+        </ThemeProvider>
+    )
+}
+
+```
+
+* Создаем файл ./app/site/resources/js/Pages/Page.tsx и добавляем код:
+```tsx
+import {Head, Link} from "@inertiajs/react"
+import FrontendLayout from "../../Layouts/FrontendLayout"
+import {useTranslation} from "react-i18next"
+
+const Index = ({ data, links } : {data:any, links:any})=>{
+    const { t } = useTranslation('frontend')
+    return (
+        <>
+            <Head title="Welcome" />
+            <h1>Welcome</h1>
+            <p>Hello, welcome to your first Inertia!</p>
+        </>
+    )
+}
+
+Index.layout = (page:any) => <FrontendLayout children={page} />
+
+export default Index
+
+```
+
+* Создаем файл ./app/site/resources/views/app.blade.php и добавляем код:
 ```html
 <!DOCTYPE html>
 <html lang="{{Config()->get('app.locale')}}">
@@ -168,6 +222,19 @@ createInertiaApp({
         @inertia
     </body>
 </html>
+```
+
+* Удаляем весь код и добавляем код в файле ./app/site/routes/web.php:
+```php
+\Illuminate\Support\Facades\Route::get('/', function () {
+    return \Inertia\Inertia::render('Page', [
+            'data' => [
+                'id'=>1,
+                'status'=>true,
+                'message'=>'GOOD!'
+            ]
+    ]);
+});
 ```
 
 * В файле ./app/site/vite.config.js весь код заменяем на
@@ -301,7 +368,7 @@ export default defineConfig({
 * файл ./docker-compose.yml в сервисе ``composer`` 
 замениваем строчку кода `entrypoint` на:
 ```yaml
-entrypoint: ["/bin/sh","-c"],
+entrypoint: ["/bin/sh","-c"]
 command:
   - cd site && composer update --ignore-platform-reqs
 ```
@@ -343,6 +410,9 @@ ASSET_URL=http://localhost:3000
   environment:
     APP_ENV: local
 ```
+
+* Удалить файл если он существует ./app/site/public/hot
+
 * Запускаем проект разработки:
 1. Проект не запущен - в файле ./docker-compose.yml запускаем **services** или
    в командной строке (запускаем из корневной папке):
