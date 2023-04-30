@@ -420,3 +420,20 @@ ASSET_URL=http://localhost:3000
 2. Проект запущен - в файле ./docker-compose.yml запускаем сервис **npm** или
   в командной строке (запускаем из корневной папке):
   ``docker compose run npm``.
+
+#### Заметки:
+* Сервисы:
+1. nginx - сервер nginx
+2. redis - кэширование
+3. db - базы данных postgres
+4. php - интерпитатор php
+5. redis-admin - панель управления по кэшированию redis
+6. pgadmin - панель управления по работе с базой данных postgres
+7. pgbackups - создание бэкапов баз данных postgres
+8. queue - очереди для ларавел
+9. cron - крон для ларавел
+10. artisan - artisan для ларавел
+11. migrate - миграция и сиды для ларавел
+12. npm - node клиент
+13. composer - установщик пакетов composer
+14. npm-files - добавляение npm пакетов в папку проекта
