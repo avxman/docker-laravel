@@ -40,8 +40,136 @@ REDIS_HOST=redis
 REDIS_PASSWORD=null
 REDIS_PORT=6379
 REDIS_CLIENT=predis
+```
+
+* Создаем папку ./app/site/resources/js/Pages
+
+* Создаем файл ./app/site/resources/styles/scss/app.scss и добавляем код:
+```scss
+/** Root style */
+```
+
+* Создаем файл ./app/site/resources/js/_app.tsx и добавляем код:
+```tsx
+// @ts-ignore
+import { createRoot } from "react-dom/client"
+
+//
+export function Setup ({el, App, props}:{el:any, App:any, props:any}) {
+    return createRoot(el).render(<App {...props} />)
+}
+
+//
+export function Resolve(name:any) {
+    // @ts-ignore
+    const pages = import.meta.glob(['./Pages/**/*.tsx'], {eager: true})
+    return pages[`./Pages/${name}.tsx`]
+}
+
+//
+export function Title(title:any){
+    return title.length?title:`Home`
+}
 
 ```
+
+* Создаем файл ./app/site/resources/js/i18n.ts и добавляем код:
+```ts
+import i18n from "i18next"
+import {HttpBackendOptions} from "i18next-http-backend"
+import LanguageDetector from "i18next-browser-languagedetector"
+import { initReactI18next } from "react-i18next"
+
+const resources = {
+    en: {
+        frontend: {
+            
+        },
+        admin: {
+            
+        },
+    },
+    uk: {
+        frontend: {
+            
+        },
+        admin: {
+            
+        },
+    }
+}
+
+i18n
+    .use(LanguageDetector)
+    .use(initReactI18next)
+    .init<HttpBackendOptions>({
+        resources,
+        fallbackLng: "en",
+        debug: true,
+        lng: "en",
+        ns: [
+            'frontend',
+            'admin',
+        ],
+        interpolation: {
+            escapeValue: false // not needed for react as it escapes by default
+        }
+    })
+    .then(r => (r))
+    .catch(e=>(e))
+
+export default i18n
+
+```
+
+* Создаем файл ./app/site/resources/js/app.ts и добавляем код:
+```ts
+import {createInertiaApp} from "@inertiajs/react"
+import Axios from "axios"
+import {Setup, Resolve, Title} from "./_app"
+import "./i18n"
+
+//
+// @ts-ignore
+globalThis.Axios = Axios
+// @ts-ignore
+globalThis.Axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest'
+
+//
+createInertiaApp({
+    title: Title,
+    resolve: Resolve,
+    setup: Setup,
+    progress: {
+        // minimum: 0.1,
+        // template:'',
+        // parent: '#container',
+        delay: 250,
+        color: '#29d',
+        includeCSS: true,
+        showSpinner: true,
+    },
+}).then(r => (r)).catch(e=>(e))
+
+```
+
+* Создаем файл ./app/site/resources/views/app.blade.php
+```html
+<!DOCTYPE html>
+<html lang="{{Config()->get('app.locale')}}">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+        @viteReactRefresh
+        @vite(['resources/styles/scss/app.scss', 'resources/js/app.ts'])
+        @inertiaHead
+    </head>
+    <body>
+        @inertia
+    </body>
+</html>
+```
+
 * В файле ./app/site/vite.config.js весь код заменяем на
 (настроено под react и typescript):
 ```js
