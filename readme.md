@@ -6,7 +6,7 @@
 
 ### Установка фреймворка laravel
 
-* В файле ./docker-composer.yml запускаем сервис **compose** или 
+* В файле ./docker-install.yml запускаем сервис **compose** или 
 в командной строке (запускаем из корневной папке): 
 ``docker compose -f docker-install.yml up composer``.
 Ожидаем завершение установки laravel
@@ -367,23 +367,31 @@ export default defineConfig({
         "predis/predis": "^2.1"
     },
 ```
-* файл ./docker-composer.yml в сервисе ``composer`` 
+* файл ./docker-install.yml в сервисе ``composer`` 
 замениваем строчку кода `entrypoint` на:
 ```yaml
 entrypoint: ["/bin/sh","-c"]
 command:
   - cd site && composer update --ignore-platform-reqs
 ```
-* В файле ./docker-composer.yml запускаем сервис **compose** или
+* В файле ./docker-install.yml запускаем сервис **compose** или
 в командной строке (запускаем из корневной папке):
 ``docker compose -f docker-install.yml up composer``. 
 Ожидаем завершение установки пакетов
 
-* Миграция и сиды. Чтобы запусить генерацию сидов (seeds) - в файле
+* После обновлений останавливаем и освобождаем все сервисы.
+  В командной строке (запускаем из корневной папке):
+``docker compose -f docker-install.yml down``
+
+* Миграция и сиды:
+1. **Запуск миграций** - в файле ./app/site/.env
+указать значение ``APP_ENV=local``. Для отключения миграций укажите
+значение ``APP_ENV=production``
+2. **Генерация сидов (seeds)** - в файле
 ./docker-compose.yml сервис **migrate** комманда **command:**
 разкоменентируем строчку ``php artisan db:seed``.
 Заметка: при каждом запуске будет запускаться генерация seeds,
-закомментируйте код в случаи повторных запусков генерации
+закомментируйте код после первого запуска во избежание повторных запусков генерации
 * **Настройка laravel завершена**
 
 ### Запуск проекта
