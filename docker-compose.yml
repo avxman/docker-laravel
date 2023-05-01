@@ -16,24 +16,6 @@ volumes:
     name: laravel-dbbackup-data
 
 services:
-  composer:
-    tty: true
-    container_name: laravel-composer
-    build:
-      context: .
-      dockerfile: Dockerfile-composer
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-composer:latest
-    entrypoint: [ "/bin/sh", "-c" ]
-    command:
-      - composer update --ignore-platform-reqs
-    volumes:
-      - ./app/site:/app
-    networks:
-      - app-network
   nginx:
     restart: unless-stopped
     container_name: laravel-nginx
@@ -277,6 +259,24 @@ services:
     depends_on:
       - db
     entrypoint: [ 'php', 'artisan', 'schedule:work' ]
+    networks:
+      - app-network
+  composer:
+    tty: true
+    container_name: laravel-composer
+    build:
+      context: .
+      dockerfile: Dockerfile-composer
+      args:
+        - UID=${UID:-1000}
+        - GID=${GID:-1000}
+        - USER=${USER:-laravel}
+    image: laravel-composer:latest
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - composer update --ignore-platform-reqs
+    volumes:
+      - ./app/site:/app
     networks:
       - app-network
   artisan:
