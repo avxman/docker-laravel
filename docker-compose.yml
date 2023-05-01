@@ -19,14 +19,11 @@ services:
   nginx:
     restart: unless-stopped
     container_name: laravel-nginx
+    image: laravel-nginx:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-nginx
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-nginx:latest
     ports:
       - "8000:80"
     volumes:
@@ -56,14 +53,11 @@ services:
   redis:
     restart: unless-stopped
     container_name: laravel-redis
+    image: laravel-redis:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-redis
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-redis:latest
     ports:
       - "8001:6379"
     volumes:
@@ -71,16 +65,13 @@ services:
     networks:
       - app-network
   db:
+    restart: unless-stopped
     container_name: laravel-db
+    image: laravel-db:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-db
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-db:latest
-    restart: unless-stopped
     ports:
       - "8002:5432"
     environment:
@@ -97,14 +88,11 @@ services:
     tty: true
     restart: unless-stopped
     container_name: laravel-php
+    image: laravel-php:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-php
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-php:latest
     ports:
       - ":9000"
     volumes:
@@ -127,16 +115,13 @@ services:
     networks:
       - app-network
   redis-admin:
-    container_name: laravel-predis
     restart: unless-stopped
+    container_name: laravel-predis
+    image: laravel-redisadmin:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-redisadmin
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-redisadmin:latest
     environment:
       REDIS_1_HOST: redis
       REDIS_1_PORT: 6379
@@ -149,14 +134,11 @@ services:
   pgadmin:
     restart: unless-stopped
     container_name: laravel-pgadmin
+    image: laravel-pgadmin:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-pgadmin
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-pgadmin:latest
     ports:
       - '8007:80'
     environment:
@@ -170,15 +152,11 @@ services:
       - app-network
   pgbackups:
     restart: unless-stopped
-    user: postgres:postgres
     image: laravel-dbbackup:latest
+    user: postgres:postgres
     build:
       context: .
       dockerfile: Dockerfile-dbbackup
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
     volumes:
       - ./db/data:/backups
       - dbbackup-data:/var/lib/postgresql/data
@@ -202,14 +180,11 @@ services:
   queue:
     restart: unless-stopped
     container_name: laravel-queue
+    image: laravel-queue:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-php
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-queue:latest
     volumes:
       - ./app/site/app:/var/www/html/app
       - ./app/site/config:/var/www/html/config
@@ -233,14 +208,11 @@ services:
   cron:
     restart: unless-stopped
     container_name: laravel-cron
+    image: laravel-cron:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-php
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-cron:latest
     volumes:
       - ./app/site/app:/var/www/html/app
       - ./app/site/config:/var/www/html/config
@@ -264,14 +236,11 @@ services:
   composer:
     tty: true
     container_name: laravel-composer
+    image: laravel-composer:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-composer
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-composer:latest
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - composer update --ignore-platform-reqs
@@ -281,14 +250,11 @@ services:
       - app-network
   artisan:
     container_name: laravel-artisan
+    image: laravel-artisan:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-php
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-artisan:latest
     volumes:
       - ./app/site/app:/var/www/html/app
       - ./app/site/config:/var/www/html/config
@@ -311,14 +277,11 @@ services:
       - app-network
   migrate:
     container_name: laravel-migrate
+    image: laravel-migrate:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-php
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-migrate:latest
     volumes:
       - ./app/site/app:/var/www/html/app
       - ./app/site/config:/var/www/html/config
@@ -346,15 +309,11 @@ services:
   npm:
     tty: true
     container_name: laravel-npm
-    entrypoint: ["npm", "run", "build", "--"] #, "--", #"--host", "0.0.0.0"
+    image: laravel-npm:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-npm
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-npm:latest
     ports:
       - "3000:3000"
     volumes:
@@ -366,6 +325,7 @@ services:
       - ./app/site/tsconfig.json:/home/node/project/tsconfig.json
       - ./app/site/package.json:/home/node/project/package.json
       - ./app/site/.env:/home/node/project/.env
+    entrypoint: ["npm", "run", "build", "--"] #, "--", #"--host", "0.0.0.0"
     environment:
       APP_ENV: production
     depends_on:
@@ -376,14 +336,11 @@ services:
   npm-files:
     tty: true
     container_name: laravel-npm-files
+    image: laravel-npm-files:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-npm
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-npm-files:latest
     ports:
       - ":3010"
     entrypoint: ["npm", "install"]
