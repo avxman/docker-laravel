@@ -256,20 +256,7 @@ services:
       context: .
       dockerfile: Dockerfile-php
     volumes:
-      - ./app/site/app:/var/www/html/app
-      - ./app/site/config:/var/www/html/config
-      - ./app/site/database:/var/www/html/database
-      - ./app/site/public:/var/www/html/public
-      - ./app/site/resources:/var/www/html/resources
-      - ./app/site/routes:/var/www/html/routes
-      - ./app/site/storage/app:/var/www/html/storage/app
-      - ./app/site/tests:/var/www/html/tests
-      - ./app/site/vite.config.js:/var/www/html/vite.config.js
-      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
-      - ./app/site/package.json:/var/www/html/package.json
-      - ./app/site/.env:/var/www/html/.env
-      - ./app/site/composer.json:/var/www/html/composer.json
-      - ./app/site/composer.lock:/var/www/html/composer.lock
+      - ./app/site:/var/www/html
     depends_on:
       - db
     entrypoint: [ 'php', 'artisan' ]
