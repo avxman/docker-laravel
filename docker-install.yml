@@ -9,15 +9,14 @@ services:
   composer:
     tty: true
     container_name: laravel-composer
+    image: laravel-composer:latest
+    user: root:root
     build:
       context: .
       dockerfile: Dockerfile-composer
-      args:
-        - UID=${UID:-1000}
-        - GID=${GID:-1000}
-        - USER=${USER:-laravel}
-    image: laravel-composer:latest
-    entrypoint: [ 'composer', 'create-project', 'laravel/laravel', 'site', '--ignore-platform-reqs' ]
+    entrypoint: ["/bin/sh","-c"]
+    command:
+      - cd site && composer update --ignore-platform-reqs
     volumes:
       - ./app:/app
     networks:

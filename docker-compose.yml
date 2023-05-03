@@ -14,6 +14,8 @@ volumes:
     name: laravel-redis-data
   dbbackup-data:
     name: laravel-dbbackup-data
+  except-data:
+    name: laravel-except-data
 
 services:
   nginx:
@@ -27,20 +29,8 @@ services:
     ports:
       - "8000:80"
     volumes:
-      - ./app/site/app/:/var/www/html/app
-      - ./app/site/config:/var/www/html/config
-      - ./app/site/database:/var/www/html/database
       - ./app/site/public:/var/www/html/public
-      - ./app/site/resources:/var/www/html/resources
-      - ./app/site/routes:/var/www/html/routes
       - ./app/site/storage/app:/var/www/html/storage/app
-      - ./app/site/tests:/var/www/html/tests
-      - ./app/site/vite.config.js:/var/www/html/vite.config.js
-      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
-      - ./app/site/package.json:/var/www/html/package.json
-      - ./app/site/.env:/var/www/html/.env
-      - ./app/site/composer.json:/var/www/html/composer.json
-      - ./app/site/composer.lock:/var/www/html/composer.lock
     depends_on:
       - php
       - db
@@ -96,22 +86,19 @@ services:
     ports:
       - ":9000"
     volumes:
-      - ./app/site/app:/var/www/html/app
-      - ./app/site/config:/var/www/html/config
-      - ./app/site/database:/var/www/html/database
-      - ./app/site/public:/var/www/html/public
-      - ./app/site/resources:/var/www/html/resources
-      - ./app/site/routes:/var/www/html/routes
-      - ./app/site/storage/app:/var/www/html/storage/app
-      - ./app/site/tests:/var/www/html/tests
-      - ./app/site/vite.config.js:/var/www/html/vite.config.js
-      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
-      - ./app/site/package.json:/var/www/html/package.json
-      - ./app/site/.env:/var/www/html/.env
-      - ./app/site/composer.json:/var/www/html/composer.json
-      - ./app/site/composer.lock:/var/www/html/composer.lock
+      - ./app/site:/var/www/html
+      - except-data:/var/www/html/node_modules
+      - except-data:/var/www/html/vendor
     depends_on:
       - redis
+    command:
+      - -c
+      - |
+        chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache;
+        chmod -R 777 /var/www/html/storage;
+        chmod -R 666 $(find /var/www/html/storage -type f);
+        chmod -R 777 /var/www/html/bootstrap/cache;
+        chmod -R 666 $(find /var/www/html/bootstrap/cache -type f);
     networks:
       - app-network
   redis-admin:
@@ -186,22 +173,11 @@ services:
       context: .
       dockerfile: Dockerfile-php
     volumes:
-      - ./app/site/app:/var/www/html/app
-      - ./app/site/config:/var/www/html/config
-      - ./app/site/database:/var/www/html/database
-      - ./app/site/public:/var/www/html/public
-      - ./app/site/resources:/var/www/html/resources
-      - ./app/site/routes:/var/www/html/routes
-      - ./app/site/storage/app:/var/www/html/storage/app
-      - ./app/site/tests:/var/www/html/tests
-      - ./app/site/vite.config.js:/var/www/html/vite.config.js
-      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
-      - ./app/site/package.json:/var/www/html/package.json
-      - ./app/site/.env:/var/www/html/.env
-      - ./app/site/composer.json:/var/www/html/composer.json
-      - ./app/site/composer.lock:/var/www/html/composer.lock
+      - ./app/site:/var/www/html
+      - except-data:/var/www/html/node_modules
     depends_on:
       - db
+      - php
     entrypoint: [ 'php', 'artisan', 'queue:work' ]
     networks:
       - app-network
@@ -214,20 +190,8 @@ services:
       context: .
       dockerfile: Dockerfile-php
     volumes:
-      - ./app/site/app:/var/www/html/app
-      - ./app/site/config:/var/www/html/config
-      - ./app/site/database:/var/www/html/database
-      - ./app/site/public:/var/www/html/public
-      - ./app/site/resources:/var/www/html/resources
-      - ./app/site/routes:/var/www/html/routes
-      - ./app/site/storage/app:/var/www/html/storage/app
-      - ./app/site/tests:/var/www/html/tests
-      - ./app/site/vite.config.js:/var/www/html/vite.config.js
-      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
-      - ./app/site/package.json:/var/www/html/package.json
-      - ./app/site/.env:/var/www/html/.env
-      - ./app/site/composer.json:/var/www/html/composer.json
-      - ./app/site/composer.lock:/var/www/html/composer.lock
+      - ./app/site:/var/www/html
+      - except-data:/var/www/html/node_modules
     depends_on:
       - db
     entrypoint: [ 'php', 'artisan', 'schedule:work' ]
@@ -240,12 +204,15 @@ services:
     user: root:root
     build:
       context: .
-      dockerfile: Dockerfile-composer
+      dockerfile: Dockerfile-php
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - composer update --ignore-platform-reqs
     volumes:
-      - ./app/site:/app
+      - ./app/site:/var/www/html
+      - except-data:/var/www/html/node_modules
+    depends_on:
+      - php
     networks:
       - app-network
   artisan:
@@ -257,6 +224,7 @@ services:
       dockerfile: Dockerfile-php
     volumes:
       - ./app/site:/var/www/html
+      - except-data:/var/www/html/node_modules
     depends_on:
       - db
     entrypoint: [ 'php', 'artisan' ]
@@ -270,27 +238,15 @@ services:
       context: .
       dockerfile: Dockerfile-php
     volumes:
-      - ./app/site/app:/var/www/html/app
-      - ./app/site/config:/var/www/html/config
-      - ./app/site/database:/var/www/html/database
-      - ./app/site/public:/var/www/html/public
-      - ./app/site/resources:/var/www/html/resources
-      - ./app/site/routes:/var/www/html/routes
-      - ./app/site/storage/app:/var/www/html/storage/app
-      - ./app/site/tests:/var/www/html/tests
-      - ./app/site/vite.config.js:/var/www/html/vite.config.js
-      - ./app/site/tsconfig.json:/var/www/html/tsconfig.json
-      - ./app/site/package.json:/var/www/html/package.json
-      - ./app/site/.env:/var/www/html/.env
-      - ./app/site/composer.json:/var/www/html/composer.json
-      - ./app/site/composer.lock:/var/www/html/composer.lock
+      - ./app/site:/var/www/html
+      - except-data:/var/www/html/node_modules
     depends_on:
       - db
     entrypoint: [ "/bin/sh","-c" ]
     command:
       - |
         php artisan migrate
-#        php artisan db:seed
+    #        php artisan db:seed
     networks:
       - app-network
   npm:
@@ -305,16 +261,19 @@ services:
       - "3000:3000"
     volumes:
       - ./app/site/public:/home/node/project/public
+      - ./app/site/lang:/home/node/project/lang
       - ./app/site/resources:/home/node/project/resources
       - ./app/site/storage/app:/home/node/project/storage/app
-      - ./app/site/tests:/home/node/project/tests
-      - ./app/site/vite.config.js:/home/node/project/vite.config.js
-      - ./app/site/tsconfig.json:/home/node/project/tsconfig.json
-      - ./app/site/package.json:/home/node/project/package.json
       - ./app/site/.env:/home/node/project/.env
+      - ./app/site/package.json:/home/node/project/package.json
+      - ./app/site/tsconfig.json:/home/node/project/tsconfig.json
+      - ./app/site/vite.config.js:/home/node/project/vite.config.js
     entrypoint: ["npm", "run", "build", "--"] #, "--", #"--host", "0.0.0.0"
     environment:
       APP_ENV: production
+    #    entrypoint: [ "npm", "run", "dev", "--" ]
+    #    environment:
+    #      APP_ENV: local
     depends_on:
       - composer
       - php
@@ -334,6 +293,7 @@ services:
     volumes:
       - ./app/site/node_modules:/home/node/project/node_modules
     depends_on:
+      - composer
       - php
     networks:
       - app-network
