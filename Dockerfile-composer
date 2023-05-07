@@ -9,6 +9,8 @@ FROM php:8.2-fpm
 
 ADD php/php.ini /usr/local/etc/php/conf.d/default.ini
 
+COPY --from=composer:2.5.5 /usr/bin/composer /usr/local/bin/composer
+
 RUN apt-get update && apt-get install -y libmcrypt-dev \
     && apt-get install -y libzip-dev \
     && apt-get install -y libpq-dev
@@ -22,4 +24,3 @@ RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
 
 WORKDIR /var/www/html
 
-COPY --from=composer:2.5.5 /usr/bin/composer /usr/local/bin/composer

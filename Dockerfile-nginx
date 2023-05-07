@@ -1,7 +1,18 @@
 FROM nginx:1.23.4
 #nginx:1.23.4
 
+WORKDIR /var/www/html
+
 ADD nginx/config /etc/nginx/conf.d
 #ADD ./nginx/logs /var/log/nginx/
 
-WORKDIR /var/www/html
+COPY ./app/site/bootstrap /var/www/html/bootstrap
+COPY ./app/site/storage /var/www/html/storage
+COPY ./app/site/public /var/www/html/public
+
+RUN chown -R www-data:www-data /var/www/html/storage \
+  && chown -R www-data:www-data /var/www/html/bootstrap \
+  && chmod -R 777 /var/www/html/storage \
+  && chmod -R 666 $(find /var/www/html/storage -type f) \
+  && chmod -R 777 /var/www/html/bootstrap/cache \
+  && chmod -R 666 $(find /var/www/html/bootstrap/cache -type f)

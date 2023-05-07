@@ -46,17 +46,15 @@ services:
       - "8000:80"
     volumes:
       - ./app/site/public:/var/www/html/public
-      - ./app/site/bootstrap:/var/www/html/bootstrap
-      - ./app/site/storage:/var/www/html/storage
+      - ./app/site/storage/app:/var/www/html/storage/app
     depends_on:
-      - composer
+#      - composer
       - php
       - db
       - redis
     links:
       - php
       - db
-      - composer
     networks:
       - app-network
   redis:
@@ -105,16 +103,27 @@ services:
     ports:
       - ":9000"
     volumes:
-      - ./app/site:/var/www/html
-      - except-data:/var/www/html/node_modules
-      - except-data:/var/www/html/vendor
+      - ./app/site/app:/var/www/html/app
+      - ./app/site/config:/var/www/html/config
+      - ./app/site/database:/var/www/html/database
+      - ./app/site/public:/var/www/html/public
+      - ./app/site/lang:/var/www/html/lang
+      - ./app/site/resources:/var/www/html/resources
+      - ./app/site/routes:/var/www/html/routes
+      - ./app/site/tests:/var/www/html/tests
+      - ./app/site/.env:/var/www/html/.env
+      - ./app/site/artisan:/var/www/html/artisan
+      - ./app/site/composer.json:/var/www/html/composer.json
+      - ./app/site/composer.lock:/var/www/html/composer.lock
+      - ./app/site/phpunit.xml:/var/www/html/phpunit.xml
     depends_on:
-      - composer
+#      - composer
       - redis
     command:
       - -c
       - |
-        chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache;
+        chown -R www-data:www-data /var/www/html/storage;
+        chown -R www-data:www-data /var/www/html/bootstrap/cache;
         chmod -R 777 /var/www/html/storage;
         chmod -R 666 $(find /var/www/html/storage -type f);
         chmod -R 777 /var/www/html/bootstrap/cache;
@@ -275,12 +284,12 @@ services:
       - ./app/site/package.json:/home/node/project/package.json
       - ./app/site/tsconfig.json:/home/node/project/tsconfig.json
       - ./app/site/vite.config.js:/home/node/project/vite.config.js
-#    entrypoint: ["npm", "run", "build", "--"] #, "--", #"--host", "0.0.0.0"
-#    environment:
-#      APP_ENV: production
-    entrypoint: [ "npm", "run", "dev", "--" ]
+    entrypoint: ["npm", "run", "build", "--"] #, "--", #"--host", "0.0.0.0"
     environment:
-      APP_ENV: local
+      APP_ENV: production
+#    entrypoint: [ "npm", "run", "dev", "--" ]
+#    environment:
+#      APP_ENV: local
     depends_on:
       - composer
       - php
