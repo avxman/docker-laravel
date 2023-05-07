@@ -1,3 +1,9 @@
+#FROM composer:2.5.5
+
+# composer:2.5.5
+#CMD ["composer", "update"]
+
+
 FROM php:8.2-fpm
 #php:8.2-fpm
 
@@ -15,9 +21,5 @@ RUN docker-php-ext-configure pgsql -with-pgsql=/usr/local/pgsql \
     && docker-php-ext-install pgsql pdo_pgsql
 
 WORKDIR /var/www/html
-
-COPY app/site/vendor /var/www/html/vendor
-COPY app/site/storage/framework /var/www/html/storage/framework
-COPY app/site/storage/logs /var/www/html/storage/logs
 
 COPY --from=composer:2.5.5 /usr/bin/composer /usr/local/bin/composer

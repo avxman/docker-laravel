@@ -16,8 +16,8 @@ services:
       dockerfile: Dockerfile-composer
     entrypoint: ["/bin/sh","-c"]
     command:
-      - cd site && composer update --ignore-platform-reqs
+      - composer create-project laravel/laravel site
     volumes:
-      - ./app:/app
+      - ./app:/var/www/html
     networks:
       - app-network

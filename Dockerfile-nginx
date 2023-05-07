@@ -1,7 +1,7 @@
 FROM nginx:1.23.4
 #nginx:1.23.4
 
-ADD ./nginx/config /etc/nginx/conf.d
+ADD nginx/config /etc/nginx/conf.d
 #ADD ./nginx/logs /var/log/nginx/
 
 WORKDIR /var/www/html

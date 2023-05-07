@@ -367,21 +367,15 @@ export default defineConfig({
         "predis/predis": "^2.1"
     },
 ```
-* файл ./docker-install.yml в сервисе ``composer`` 
-замениваем строчку кода `entrypoint` на:
-```yaml
-entrypoint: ["/bin/sh","-c"]
-command:
-  - cd site && composer update --ignore-platform-reqs
-```
-* В файле ./docker-install.yml запускаем сервис **compose** или
+
+* В файле ./docker-compose.yml запускаем сервис **compose** или
 в командной строке (запускаем из корневной папке):
-``docker compose -f docker-install.yml up composer``. 
+``docker compose up composer``. 
 Ожидаем завершение установки пакетов
 
 * После обновлений останавливаем и освобождаем все сервисы.
   В командной строке (запускаем из корневной папке):
-``docker compose -f docker-install.yml down``
+``docker compose down``
 
 * Миграция и сиды:
 1. **Запуск миграций** - в файле ./app/site/.env

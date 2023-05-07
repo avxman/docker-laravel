@@ -22,4 +22,16 @@ COPY app/site/storage/logs /var/www/html/storage/logs
 
 COPY --from=composer:2.5.5 /usr/bin/composer /usr/local/bin/composer
 
+#COPY app/site/bootstrap /var/www/html/bootstrap
+#COPY app/site/storage/framework /var/www/html/storage/framework
+#COPY app/site/storage/logs /var/www/html/storage/logs
+#
+#RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+#  && chmod -R 777 /var/www/html/storage \
+#  && chmod -R 666 $(find /var/www/html/storage -type f) \
+#  && chmod -R 777 /var/www/html/bootstrap/cache \
+#  && chmod -R 666 $(find /var/www/html/bootstrap/cache -type f)
+
+#COPY --from=composer /usr/bin/composer /usr/local/bin/composer
+
 CMD ["php-fpm"]
