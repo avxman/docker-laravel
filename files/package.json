@@ -1,0 +1,43 @@
+{
+    "private": true,
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "devDependencies": {
+        "@types/node": "^18.14.1",
+        "axios": "^1.1.2",
+        "laravel-vite-plugin": "^0.7.2",
+        "sass": "^1.58.3",
+        "vite": "^4.0.0"
+    },
+    "dependencies": {
+        "@inertiajs/inertia": "^0.11.1",
+        "@inertiajs/react": "^1.0.2",
+        "@types/lodash": "^4.14.191",
+        "@vitejs/plugin-react": "^3.1.0",
+        "i18next": "^22.4.10",
+        "i18next-browser-languagedetector": "^7.0.1",
+        "i18next-http-backend": "^2.1.1",
+        "i18next-resources-to-backend": "^1.1.1",
+        "nprogress": "^0.2.0",
+        "react-bootstrap": "^2.7.2",
+        "react-dom": "^18.2.0",
+        "react-i18next": "^12.1.5"
+    },
+    "browserslist": {
+        "production": [
+            ">0.2%",
+            "not dead",
+            "not op_mini all"
+        ],
+        "development": [
+            "last 1 chrome version",
+            "last 1 firefox version",
+            "last 1 safari version"
+        ]
+    },
+    "browser": {
+        "[module-name]": false
+    }
+}
