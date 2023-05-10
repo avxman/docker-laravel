@@ -1,4 +1,4 @@
 FROM postgres:15.2
 #postgres:15.2
 
-#COPY ./db/data/daily/postgres-20230423.sql /docker-entrypoint-initdb.d/
+#COPY ./db/data/daily/postgres-20230509.sql /docker-entrypoint-initdb.d/

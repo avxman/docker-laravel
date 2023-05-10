@@ -6,9 +6,9 @@
 
 ### Установка фреймворка laravel
 
-* В файле ./docker-install.yml запускаем сервис **compose** или 
+* В файле ./docker-install.yml запускаем сервис **composer-install** или 
 в командной строке (запускаем из корневной папке): 
-``docker compose -f docker-install.yml up composer``.
+``docker compose -f docker-install.yml up composer-install``.
 Ожидаем завершение установки laravel
 
 * В файле ./app/site/.env добавить и отредактировать ключи:
@@ -36,6 +36,8 @@ DB_USERNAME=postgres
 # Указать пароль
 DB_PASSWORD=dfhsfs3434235
 
+QUEUE_CONNECTION=database
+
 # Настройки Redis
 CACHE_DRIVER=redis
 REDIS_HOST=redis
@@ -51,15 +53,23 @@ REDIS_CLIENT=predis
 * в файле ./app/site/composer.json заменяем и добавляем:
 ```text
     "require": {
+        ...,
         "php": "^8.2",
         "inertiajs/inertia-laravel": "^0.6.9",
-        "predis/predis": "^2.1"
+        "predis/predis": "^2.1",
+        "moonshine/moonshine":  "^1.55",
+        ...
     },
 ```
 
-* В файле ./docker-compose.yml запускаем сервис **compose** или
+* Останавливаем и удаляем все сервисы,
+  файл ./docker-install.yml останавливаем и выгружаем сервисы **composer-install** или
+  в командной строке (запускаем из корневной папке):
+`` docker compose -f docker-install.yml down ``
+
+* В файле ./docker-install.yml запускаем сервис **composer-update** или
 в командной строке (запускаем из корневной папке):
-``docker compose up composer``. 
+``docker compose -f docker-install.yml up composer-update``. 
 Ожидаем завершение установки пакетов
 
 * После обновлений останавливаем и освобождаем все сервисы.
@@ -107,6 +117,14 @@ ASSET_URL=http://localhost:3000
 ```
 
 * Удалить файл если он существует ./app/site/public/hot
+
+* Импорт существующей БД. В файле ./docker-compose.yml сервисе **db**
+в параметре **volumes** добавляем значение:
+```- ./db/data/name_db.sql:/docker-entrypoint-initdb.d/ ```
+А также коментируем строчку в параметре **environment** значение `` # POSTGRES_DB: postgres ``
+В файле ./app/site/.env указываем новое имя БД `` DB_DATABASE=user ``
+
+* При глобальных изменений нужно заново пересобирать образы и контейнеры
 
 * Запускаем проект разработки:
 1. Проект не запущен - в файле ./docker-compose.yml запускаем **services** или

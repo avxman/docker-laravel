@@ -5,8 +5,12 @@ networks:
     name: laravel-network
     driver: bridge
 
+volumes:
+  node-modules-composer:
+    name: laravel-data-node-modules
+
 services:
-  composer:
+  composer-install:
     tty: true
     container_name: laravel-composer
     image: laravel-composer:latest
@@ -19,5 +23,20 @@ services:
       - composer create-project laravel/laravel site
     volumes:
       - ./app:/var/www/html
+    networks:
+      - app-network
+  composer-update:
+    container_name: laravel-composer
+    image: laravel-composer:latest
+    user: root:root
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - composer update --ignore-platform-reqs
+    volumes:
+      - ./app/site:/var/www/html
+      - node-modules-composer:/var/www/html/node_modules
     networks:
       - app-network

@@ -7,33 +7,27 @@ networks:
 
 volumes:
   postgres-data:
-    name: laravel-db-data
+    name: laravel-data-db
   pgadmin-data:
-    name: laravel-pgadmin-data
+    name: laravel-data-pgadmin
   redis-data:
-    name: laravel-redis-data
+    name: laravel-data-redis
   dbbackup-data:
-    name: laravel-dbbackup-data
-  except-data:
-    name: laravel-except-data
+    name: laravel-data-dbbackup
+  node-modules:
+    name: laravel-data-node-modules
+  vendor:
+    name: laravel-data-vendor
+  storage-app:
+    name: laravel-data-storage-app
+  php-bootstrap-cache:
+    name: laravel-data-php-bootstrap-cache
+  php-storage-framework:
+    name: laravel-data-php-storage-framework
+  php-storage-logs:
+    name: laravel-data-php-storage-logs
 
 services:
-  composer:
-    tty: true
-    container_name: laravel-composer
-    image: laravel-composer:latest
-    user: root:root
-    build:
-      context: .
-      dockerfile: Dockerfile-php
-    entrypoint: [ "/bin/sh", "-c" ]
-    command:
-      - composer update --ignore-platform-reqs
-    volumes:
-      - ./app/site:/var/www/html
-      - except-data:/var/www/html/node_modules
-    networks:
-      - app-network
   nginx:
     restart: unless-stopped
     container_name: laravel-nginx
@@ -47,8 +41,8 @@ services:
     volumes:
       - ./app/site/public:/var/www/html/public
       - ./app/site/storage/app:/var/www/html/storage/app
+      - vendor:/var/www/html/vendor
     depends_on:
-#      - composer
       - php
       - db
       - redis
@@ -71,65 +65,6 @@ services:
       - redis-data:/data
     networks:
       - app-network
-  db:
-    restart: unless-stopped
-    container_name: laravel-db
-    image: laravel-db:latest
-    user: root:root
-    build:
-      context: .
-      dockerfile: Dockerfile-db
-    ports:
-      - "8002:5432"
-    environment:
-      #- POSTGRES_HOST=localhost
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: dfhsfs3434235
-    volumes:
-      - postgres-data:/var/lib/postgresql/data
-    #      - ./db/data:/var/lib/postgresql/data
-    networks:
-      - app-network
-  php:
-    tty: true
-    restart: unless-stopped
-    container_name: laravel-php
-    image: laravel-php:latest
-    user: root:root
-    build:
-      context: .
-      dockerfile: Dockerfile-php
-    ports:
-      - ":9000"
-    volumes:
-      - ./app/site/app:/var/www/html/app
-      - ./app/site/config:/var/www/html/config
-      - ./app/site/database:/var/www/html/database
-      - ./app/site/public:/var/www/html/public
-      - ./app/site/lang:/var/www/html/lang
-      - ./app/site/resources:/var/www/html/resources
-      - ./app/site/routes:/var/www/html/routes
-      - ./app/site/tests:/var/www/html/tests
-      - ./app/site/.env:/var/www/html/.env
-      - ./app/site/artisan:/var/www/html/artisan
-      - ./app/site/composer.json:/var/www/html/composer.json
-      - ./app/site/composer.lock:/var/www/html/composer.lock
-      - ./app/site/phpunit.xml:/var/www/html/phpunit.xml
-    depends_on:
-#      - composer
-      - redis
-    command:
-      - -c
-      - |
-        chown -R www-data:www-data /var/www/html/storage;
-        chown -R www-data:www-data /var/www/html/bootstrap/cache;
-        chmod -R 777 /var/www/html/storage;
-        chmod -R 666 $(find /var/www/html/storage -type f);
-        chmod -R 777 /var/www/html/bootstrap/cache;
-        chmod -R 666 $(find /var/www/html/bootstrap/cache -type f);
-    networks:
-      - app-network
   redis-admin:
     restart: unless-stopped
     container_name: laravel-predis
@@ -145,6 +80,26 @@ services:
       - "8004:80"
     depends_on:
       - redis
+    networks:
+      - app-network
+  db:
+    restart: unless-stopped
+    container_name: laravel-db
+    image: laravel-db:latest
+    user: root:root
+    build:
+      context: .
+      dockerfile: Dockerfile-db
+    ports:
+      - "8002:5432"
+    environment:
+      #- POSTGRES_HOST=localhost
+      POSTGRES_DB: postgres
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: "fg(45;liJFs#fdR&g!4"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+#      - ./db/data/name_db.sql:/var/lib/postgresql/data
     networks:
       - app-network
   pgadmin:
@@ -166,6 +121,79 @@ services:
       - pgadmin-data:/var/lib/pgadmin
     networks:
       - app-network
+  php:
+    tty: true
+    restart: unless-stopped
+    container_name: laravel-php
+    image: laravel-php:latest
+    user: root:root
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    ports:
+      - ":9000"
+    volumes:
+      - ./app/site:/var/www/html
+      - php-bootstrap-cache:/var/www/html/bootstrap/cache
+      - node-modules:/var/www/html/node_modules
+      - php-storage-framework:/var/www/html/storage/framework
+      - php-storage-logs:/var/www/html/storage/logs
+      - vendor:/var/www/html/vendor
+    depends_on:
+      - redis
+    command:
+      - -c
+      - |
+        chown -R www-data:www-data /var/www/html/storage;
+        chown -R www-data:www-data /var/www/html/bootstrap/cache;
+        chmod -R 777 /var/www/html/storage;
+        chmod -R 666 $(find /var/www/html/storage -type f);
+        chmod -R 777 /var/www/html/bootstrap/cache;
+        chmod -R 666 $(find /var/www/html/bootstrap/cache -type f);
+    networks:
+      - app-network
+  cron:
+    restart: unless-stopped
+    container_name: laravel-cron
+    image: laravel-cron:latest
+    user: root:root
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    volumes:
+      - ./app/site:/var/www/html
+      - php-bootstrap-cache:/var/www/html/bootstrap/cache
+      - node-modules:/var/www/html/node_modules
+      - php-storage-framework:/var/www/html/storage/framework
+      - php-storage-logs:/var/www/html/storage/logs
+      - vendor:/var/www/html/vendor
+    depends_on:
+      - db
+      - php
+    entrypoint: [ 'php', 'artisan', 'schedule:work' ]
+    networks:
+      - app-network
+  queue:
+    restart: unless-stopped
+    container_name: laravel-queue
+    image: laravel-queue:latest
+    user: root:root
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    volumes:
+      - ./app/site:/var/www/html
+      - php-bootstrap-cache:/var/www/html/bootstrap/cache
+      - node-modules:/var/www/html/node_modules
+      - php-storage-framework:/var/www/html/storage/framework
+      - php-storage-logs:/var/www/html/storage/logs
+      - vendor:/var/www/html/vendor
+    depends_on:
+      - db
+      - php
+    entrypoint: [ 'php', 'artisan', 'queue:work' ]
+    networks:
+      - app-network
   pgbackups:
     restart: unless-stopped
     image: laravel-dbbackup:latest
@@ -183,86 +211,14 @@ services:
     environment:
       - POSTGRES_HOST=db
       - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=dfhsfs3434235
+      - POSTGRES_USER=user
+      - POSTGRES_PASSWORD=fg(45;liJFs#fdR&g!4
       - POSTGRES_EXTRA_OPTS=-Z9 --schema=public --blobs
-      - SCHEDULE=@every 12h00m00s
+      - SCHEDULE=@every 00h30m30s
       - BACKUP_KEEP_DAYS=7
       - BACKUP_KEEP_WEEKS=4
       - BACKUP_KEEP_MONTHS=6
       - HEALTHCHECK_PORT=81
-    networks:
-      - app-network
-  queue:
-    restart: unless-stopped
-    container_name: laravel-queue
-    image: laravel-queue:latest
-    user: root:root
-    build:
-      context: .
-      dockerfile: Dockerfile-php
-    volumes:
-      - ./app/site:/var/www/html
-      - except-data:/var/www/html/node_modules
-    depends_on:
-      - composer
-      - db
-      - php
-    entrypoint: [ 'php', 'artisan', 'queue:work' ]
-    networks:
-      - app-network
-  cron:
-    restart: unless-stopped
-    container_name: laravel-cron
-    image: laravel-cron:latest
-    user: root:root
-    build:
-      context: .
-      dockerfile: Dockerfile-php
-    volumes:
-      - ./app/site:/var/www/html
-      - except-data:/var/www/html/node_modules
-    depends_on:
-      - composer
-      - db
-      - php
-    entrypoint: [ 'php', 'artisan', 'schedule:work' ]
-    networks:
-      - app-network
-  artisan:
-    container_name: laravel-artisan
-    image: laravel-artisan:latest
-    user: root:root
-    build:
-      context: .
-      dockerfile: Dockerfile-php
-    volumes:
-      - ./app/site:/var/www/html
-      - except-data:/var/www/html/node_modules
-    depends_on:
-      - composer
-      - db
-    entrypoint: [ 'php', 'artisan' ]
-    networks:
-      - app-network
-  migrate:
-    container_name: laravel-migrate
-    image: laravel-migrate:latest
-    user: root:root
-    build:
-      context: .
-      dockerfile: Dockerfile-php
-    volumes:
-      - ./app/site:/var/www/html
-      - except-data:/var/www/html/node_modules
-    depends_on:
-      - composer
-      - db
-    entrypoint: [ "/bin/sh","-c" ]
-    command:
-      - |
-        php artisan migrate
-#        php artisan db:seed
     networks:
       - app-network
   npm:
@@ -276,6 +232,12 @@ services:
     ports:
       - "3000:3000"
     volumes:
+      #      - ./app/site:/home/node/project
+      #      - php-bootstrap-cache:/home/node/project/bootstrap/cache
+      #      - node-modules:/home/node/project/node_modules
+      #      - php-storage-framework:/home/node/project/storage/framework
+      #      - php-storage-logs:/home/node/project/storage/logs
+      #      - vendor:/home/node/project/vendor
       - ./app/site/public:/home/node/project/public
       - ./app/site/lang:/home/node/project/lang
       - ./app/site/resources:/home/node/project/resources
@@ -284,19 +246,37 @@ services:
       - ./app/site/package.json:/home/node/project/package.json
       - ./app/site/tsconfig.json:/home/node/project/tsconfig.json
       - ./app/site/vite.config.js:/home/node/project/vite.config.js
-    entrypoint: ["npm", "run", "build", "--"] #, "--", #"--host", "0.0.0.0"
+    entrypoint: [ "npm", "run", "build", "--" ] #, "--", #"--host", "0.0.0.0"
     environment:
       APP_ENV: production
 #    entrypoint: [ "npm", "run", "dev", "--" ]
 #    environment:
 #      APP_ENV: local
     depends_on:
-      - composer
       - php
     networks:
       - app-network
+  artisan:
+    container_name: laravel-artisan
+    image: laravel-artisan:latest
+    user: root:root
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    volumes:
+      - ./app/site:/var/www/html
+      - node-modules:/var/www/html/node_modules
+      - php-storage-framework:/var/www/html/storage/framework
+      - php-storage-logs:/var/www/html/storage/logs
+      - storage-app:/var/www/html/storage/app
+      - vendor:/var/www/html/vendor
+    depends_on:
+      - db
+      - php
+    entrypoint: [ 'php', 'artisan' ]
+    networks:
+      - app-network
   npm-files:
-    tty: true
     container_name: laravel-npm-files
     image: laravel-npm-files:latest
     user: root:root
@@ -305,12 +285,46 @@ services:
       dockerfile: Dockerfile-npm
     ports:
       - ":3010"
-    entrypoint: ["npm", "install"]
+    entrypoint: [ "npm", "install" ]
     volumes:
       - ./app/site/package.json:/home/node/project/package.json
       - ./app/site/node_modules:/home/node/project/node_modules
     depends_on:
-      - composer
       - php
     networks:
       - app-network
+  migrate:
+    container_name: laravel-migrate
+    image: laravel-migrate:latest
+    user: root:root
+    build:
+      context: .
+      dockerfile: Dockerfile-php
+    volumes:
+      - ./app/site:/var/www/html
+      - php-bootstrap-cache:/var/www/html/bootstrap/cache
+      - node-modules:/var/www/html/node_modules
+      - php-storage-framework:/var/www/html/storage/framework
+      - php-storage-logs:/var/www/html/storage/logs
+      - vendor:/var/www/html/vendor
+    depends_on:
+      - db
+    entrypoint: [ "/bin/sh","-c" ]
+    command:
+      - |
+        php artisan migrate
+    #        php artisan db:seed
+    networks:
+      - app-network
+
+
+
+
+
+
+
+
+
+
+
+
